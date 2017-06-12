@@ -17,5 +17,5 @@ CREATE TABLE `dictionary_meta` (
   `dict_id` int(11) DEFAULT '0',
   `sound_file` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
