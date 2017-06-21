@@ -4,6 +4,10 @@
 #
 
 
+CREATE DATABASE IF NOT EXISTS `corpus` DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;
+USE `corpus`;
+
+
 CREATE TABLE `dictionary` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `body` text COLLATE utf8mb4_unicode_ci,
