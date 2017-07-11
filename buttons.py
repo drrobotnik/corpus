@@ -27,14 +27,14 @@ class OLED_UI( object ) :
     previous_text = ''
     content = ''
 
-    def __init__( self ) :
+    def __init__( self) :
         self.initialize_GPIO()
         self.setup_GPIO_events()
         self.initialize_screen()
         ui_state = self.ui_state
         self.update_ui_state( ui_state )
 
-    def initialize_gpio() :
+    def initialize_GPIO( self ) :
 
         GPIO.setmode( GPIO.BCM ) 
 
@@ -44,17 +44,17 @@ class OLED_UI( object ) :
         GPIO.setup( self.D_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP ) # Input with pull-up
         GPIO.setup( self.C_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP ) # Input with pull-up
 
-    def setup_GPIO_events() :
+    def setup_GPIO_events( self ) :
         #GPIO.add_event_detect(U_pin, GPIO.FALLING, callback=count_up, bouncetime=300)
         #GPIO.add_event_detect(D_pin, GPIO.FALLING, callback=count_down, bouncetime=300)
 
-        GPIO.add_event_detect(self.U_pin, GPIO.FALLING, callback=direction_event, bouncetime=300)
-        GPIO.add_event_detect(self.D_pin, GPIO.FALLING, callback=direction_event, bouncetime=300)
+        GPIO.add_event_detect(self.U_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300)
+        GPIO.add_event_detect(self.D_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300)
 
-        GPIO.add_event_detect(self.L_pin, GPIO.FALLING, callback=direction_event, bouncetime=300)
-        GPIO.add_event_detect(self.R_pin, GPIO.FALLING, callback=direction_event, bouncetime=300)
+        GPIO.add_event_detect(self.L_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300)
+        GPIO.add_event_detect(self.R_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300)
 
-    def initialize_screen() :
+    def initialize_screen( self ) :
 
         disp = Adafruit_SSD1306.SSD1306_128_32( rst=self.RST_pin )
         self.disp = disp
@@ -83,19 +83,19 @@ class OLED_UI( object ) :
         # Load default font.
         self.font = ImageFont.load_default()
 
-    def get_ui_state() :
+    def get_ui_state( self ) :
         return self.ui_state
 
-    def update_ui_state( state ) :
+    def update_ui_state( self, state ) :
         # File based directional UI
 
         # define default
-        file = '/home/pi/history.log'
+        file = './history.log'
 
         if( 'history' == state ) : # initial state is history
-            file = '/home/pi/history.log'
+            file = './history.log'
         elif( 'results' == state ) : # ASR results
-            file = '/home/pi/words.log'
+            file = './words.log'
 
         with open( file ) as f :
             content = f.readlines()
@@ -106,10 +106,10 @@ class OLED_UI( object ) :
         self.content = [x.strip() for x in content]
         self.list_len = len(content)
 
-    def get_current_line() :
+    def get_current_line( self ) :
         return self.current_line
 
-    def set_current_line( line ) :
+    def set_current_line( self, line ) :
         list_len = self.list_len
 
         if( line >= list_len ) :
@@ -121,7 +121,7 @@ class OLED_UI( object ) :
         self.current_line = line
         return current_line
 
-    def count_up( obj ) :
+    def count_up( self ) :
         current_line = self.get_current_line()
         new_line = self.set_current_line( current_line + 1 )
 
@@ -130,7 +130,7 @@ class OLED_UI( object ) :
         
         self.get_text_from_line( new_line )
 
-    def count_down( obj ) :
+    def count_down( self ) :
         current_line = self.get_current_line()
         new_line = self.set_current_line( current_line - 1 )
 
@@ -139,7 +139,7 @@ class OLED_UI( object ) :
         
         self.get_text_from_line( new_line )
 
-    def direction_event( obj ) :
+    def direction_event( self, obj ) :
         current_line = self.get_current_line()
 
         print 'direction_event: '
@@ -186,9 +186,12 @@ class OLED_UI( object ) :
         print text
         return text
 
+
+UI = OLED_UI()
+
 try:
     while 1:
-        if not GPIO.input(C_pin):
+        if not GPIO.input(UI.C_pin):
             catImage = Image.open('/home/pi/happycat_oled_32.ppm').convert('1')
             disp.image(catImage)
         else:
