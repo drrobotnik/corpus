@@ -176,10 +176,10 @@ class OLED_UI( object ) :
         return text
 
     def get_text_from_line( self, line, x=0, top=-2 ) :
-
+        draw = self.draw
         text = self.content[ line ]
         draw.rectangle( (0, 0, self.width, self.height ), outline=0, fill=0 )
-        draw.text( (x, top ), str( text ),  font=font, fill=255 )
+        draw.text( (x, top ), str( text ),  font=self.font, fill=255 )
         
         print text
         return text
