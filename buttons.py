@@ -112,6 +112,9 @@ class OLED_UI( object ) :
     def set_current_line( self, line ) :
         list_len = self.list_len
 
+        print line
+        print list_len
+
         if( line >= list_len ) :
             line = list_len
 
@@ -119,7 +122,7 @@ class OLED_UI( object ) :
             line = 0
 
         self.current_line = line
-        return current_line
+        return line
 
     def count_up( self ) :
         current_line = self.get_current_line()
@@ -145,29 +148,24 @@ class OLED_UI( object ) :
         print 'direction_event: '
         print obj
         
-        if U_pin == obj :
+        if self.U_pin == obj :
             new_line = current_line + 1
-        elif D_pin == obj :
+        elif self.D_pin == obj :
             new_line = current_line - 1
         
-        if U_pin == obj or D_pin == obj :
-            new_line = self.set_current_line( new_line )
-            self.get_text_from_line( new_line )
+        if self.U_pin == obj or self.D_pin == obj :
+            new_line = UI.set_current_line( new_line )
+            UI.get_text_from_line( new_line )
             print new_line
 
-        if L_pin == obj or R_pin == obj :
+        if self.L_pin == obj or self.R_pin == obj :
             ui_state = self.ui_state
-            if R_pin : # clicked forward, regardless of UI state, play current line sound
+            if self.R_pin : # clicked forward, regardless of UI state, play current line sound
                 # @TODO: play sound
                 self.update_ui_state( 'history' ) # reset interface
-            elif 'result' == ui_state and L_Pin : # clicked back on result line, return to history
+            elif 'result' == ui_state and self.L_Pin : # clicked back on result line, return to history
                 self.update_ui_state( 'history' ) # reset interface
 
-
-        if L_pin == obj :
-           get_text_from_input( 'left' )
-        elif R_pin == obj :
-           get_text_from_input( 'right' )
 
     def get_text_from_input( text, x=0, top=-2 ) :
 
@@ -177,7 +175,7 @@ class OLED_UI( object ) :
         print text
         return text
 
-    def get_text_from_line( line, x=0, top=-2 ) :
+    def get_text_from_line( self, line, x=0, top=-2 ) :
 
         text = self.content[ line ]
         draw.rectangle( (0, 0, self.width, self.height ), outline=0, fill=0 )
@@ -193,12 +191,12 @@ try:
     while 1:
         if not GPIO.input(UI.C_pin):
             catImage = Image.open('/home/pi/happycat_oled_32.ppm').convert('1')
-            disp.image(catImage)
+            UI.disp.image(catImage)
         else:
             # Display image.
-            disp.image(image)
+            UI.disp.image(UI.image)
 
-        disp.display()
+        UI.disp.display()
         time.sleep(.01) 
 
 
