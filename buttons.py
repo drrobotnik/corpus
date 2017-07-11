@@ -112,9 +112,6 @@ class OLED_UI( object ) :
     def set_current_line( self, line ) :
         list_len = self.list_len
 
-        print line
-        print list_len
-
         if( line >= list_len ) :
             line = list_len
 
