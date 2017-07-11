@@ -104,7 +104,7 @@ class OLED_UI( object ) :
         self.current_line = 0
         self.previous_text = ''
         self.content = [x.strip() for x in content]
-        self.list_len = len(content)
+        self.list_len = len( self.content )
 
     def get_current_line( self ) :
         return self.current_line
@@ -130,7 +130,7 @@ class OLED_UI( object ) :
 
         print 'count up: '
         print new_line
-        
+
         self.get_text_from_line( new_line )
 
     def count_down( self ) :
@@ -154,8 +154,8 @@ class OLED_UI( object ) :
             new_line = current_line - 1
         
         if self.U_pin == obj or self.D_pin == obj :
-            new_line = UI.set_current_line( new_line )
-            UI.get_text_from_line( new_line )
+            new_line = self.set_current_line( new_line )
+            self.get_text_from_line( new_line )
             print new_line
 
         if self.L_pin == obj or self.R_pin == obj :
