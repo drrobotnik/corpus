@@ -1,3 +1,2 @@
 config.php
-unwanted-stuff.log
-words.log
+*.log
