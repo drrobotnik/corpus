@@ -214,11 +214,11 @@ class OLED_UI( object ) :
         os.system('play ' + path + ' &')
 
     def get_sound_duration( self, path ) :
-        with contextlib.closing( wave.open( fname, 'r' ) ) as f :
+        with contextlib.closing( wave.open( path, 'r' ) ) as f :
             frames = f.getnframes()
             rate = f.getframerate()
             duration = frames / float(rate)
-            print(duration)
+            return duration
 
     def get_keypad_key( self ) :
 
@@ -288,19 +288,19 @@ try :
             # Display image.
             UI.disp.image( UI.image )
 
-        
+        sleep = .25
         digit = UI.get_keypad_key()
 
         if digit != None :
             print digit
             UI.play_sound( UI.soundboard[digit] )
             UI.update_ui_state( 'history' ) # reset interface
-            UI.get_sound_duration( UI.soundboard[digit] )
+            sleep = UI.get_sound_duration( UI.soundboard[digit] )
             digit = None
 
 
         UI.disp.display()
-        time.sleep( .25 )
+        time.sleep( sleep )
 
 except KeyboardInterrupt: 
     GPIO.cleanup()
