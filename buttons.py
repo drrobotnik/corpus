@@ -214,8 +214,8 @@ class OLED_UI( object ) :
                 rowVal = i
 
         # if rowVal is not 0 thru 3 then no button was pressed and we can exit
-        if rowVal <0 or rowVal >3:
-            self.exit()
+        if rowVal < 0 or rowVal > 3:
+            self.reinitialize_keypad()
             return
 
         # Convert columns to input
@@ -236,7 +236,7 @@ class OLED_UI( object ) :
 
         # if colVal is not 0 thru 2 then no button was pressed and we can exit
         if colVal <0 or colVal >2:
-            self.exit()
+            self.reinitialize_keypad()
             return
 
         # Return the value of the key pressed
