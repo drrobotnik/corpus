@@ -21,6 +21,17 @@ class OLED_UI( object ) :
     U_pin = 19
     D_pin = 6
 
+    # CONSTANTS   
+    KEYPAD = [
+    [1,2,3],
+    [4,5,6],
+    [7,8,9],
+    ["*",0,"#"]
+    ]
+
+    ROW         = [18,23,25,12]
+    COLUMN      = [21,20,16]
+
     ui_state = 'history'
     current_line = 0
     list_len = 0
@@ -31,6 +42,8 @@ class OLED_UI( object ) :
         self.initialize_GPIO()
         self.setup_GPIO_events()
         self.initialize_screen()
+        self.get_keypad_key()
+
         ui_state = self.ui_state
         self.update_ui_state( ui_state )
 
@@ -48,11 +61,11 @@ class OLED_UI( object ) :
         #GPIO.add_event_detect(U_pin, GPIO.FALLING, callback=count_up, bouncetime=300)
         #GPIO.add_event_detect(D_pin, GPIO.FALLING, callback=count_down, bouncetime=300)
 
-        GPIO.add_event_detect(self.U_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300)
-        GPIO.add_event_detect(self.D_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300)
+        GPIO.add_event_detect( self.U_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
+        GPIO.add_event_detect( self.D_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
 
-        GPIO.add_event_detect(self.L_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300)
-        GPIO.add_event_detect(self.R_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300)
+        GPIO.add_event_detect( self.L_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
+        GPIO.add_event_detect( self.R_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
 
     def initialize_screen( self ) :
 
@@ -76,7 +89,7 @@ class OLED_UI( object ) :
         self.draw = ImageDraw.Draw( self.image )
 
         # Draw a black filled box to clear the image.
-        self.draw.rectangle( (0, 0, self.width, self.height ), outline=0, fill=0 )
+        self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
         x = 0
         top = -2
 
@@ -99,7 +112,7 @@ class OLED_UI( object ) :
 
         with open( file ) as f :
             content = f.readlines()
-        
+
         # reset previous list related settings when ui changes
         self.current_line = 0
         self.previous_text = ''
@@ -136,7 +149,7 @@ class OLED_UI( object ) :
 
         print 'count down: '
         print new_line
-        
+
         self.get_text_from_line( new_line )
 
     def direction_event( self, obj ) :
@@ -177,25 +190,79 @@ class OLED_UI( object ) :
         text = self.content[ line ]
         draw.rectangle( (0, 0, self.width, self.height ), outline=0, fill=0 )
         draw.text( (x, top ), str( text ),  font=self.font, fill=255 )
-        
+
         print text
         return text
 
+    def get_keypad_key( self ) :
+
+        # Set all columns as output low
+        for j in range( len( self.COLUMN ) ) :
+            GPIO.setup( self.COLUMN[j], GPIO.OUT )
+            GPIO.output( self.COLUMN[j], GPIO.LOW )
+
+        # Set all rows as input
+        for i in range( len( self.ROW ) ) :
+            GPIO.setup( self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP )
+
+        # Scan rows for pushed key/button
+        # A valid key press should set "rowVal"  between 0 and 3.
+        rowVal = -1
+        for i in range( len( self.ROW ) ) :
+            tmpRead = GPIO.input( self.ROW[i] )
+            if tmpRead == 0:
+                rowVal = i
+
+        # if rowVal is not 0 thru 3 then no button was pressed and we can exit
+        if rowVal <0 or rowVal >3:
+            self.exit()
+            return
+
+        # Convert columns to input
+        for j in range( len( self.COLUMN ) ) :
+                GPIO.setup( self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_DOWN )
+
+        # Switch the i-th row found from scan to output
+        GPIO.setup( self.ROW[ rowVal ], GPIO.OUT )
+        GPIO.output( self.ROW[ rowVal ], GPIO.HIGH )
+
+        # Scan columns for still-pushed key/button
+        # A valid key press should set "colVal"  between 0 and 2.
+        colVal = -1
+        for j in range( len( self.COLUMN ) ) :
+            tmpRead = GPIO.input( self.COLUMN[j] )
+            if tmpRead == 1 :
+                colVal = j
+
+        # if colVal is not 0 thru 2 then no button was pressed and we can exit
+        if colVal <0 or colVal >2:
+            self.exit()
+            return
+
+        # Return the value of the key pressed
+        self.reinitialize_keypad()
+        return self.KEYPAD[ rowVal ][ colVal ]
+
+    def reinitialize_keypad( self ) :
+        # Reinitialize all rows and columns as input at exit
+        for i in range( len( self.ROW ) ) :
+            GPIO.setup( self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP ) 
+        for j in range( len( self.COLUMN ) ) :
+            GPIO.setup( self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_UP )
 
 UI = OLED_UI()
 
-try:
-    while 1:
-        if not GPIO.input(UI.C_pin):
-            catImage = Image.open('/home/pi/happycat_oled_32.ppm').convert('1')
-            UI.disp.image(catImage)
-        else:
+try :
+    while 1 :
+        if not GPIO.input( UI.C_pin ) :
+            catImage = Image.open( './happycat_oled_32.ppm' ).convert( '1' )
+            UI.disp.image( catImage )
+        else :
             # Display image.
-            UI.disp.image(UI.image)
+            UI.disp.image( UI.image )
 
         UI.disp.display()
-        time.sleep(.01) 
-
+        time.sleep( .01 )
 
 except KeyboardInterrupt: 
     GPIO.cleanup()

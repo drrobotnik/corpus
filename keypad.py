@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 #import wiringpi as GPIO
 
-class keypad():
+class keypad() :
     # CONSTANTS   
     KEYPAD = [
     [1,2,3],
@@ -71,7 +71,7 @@ class keypad():
                 GPIO.setup(self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP) 
         for j in range(len(self.COLUMN)):
                 GPIO.setup(self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        
+
 if __name__ == '__main__':
     # Initialize the keypad class
     kp = keypad()
