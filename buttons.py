@@ -1,6 +1,9 @@
 import os
 import RPi.GPIO as GPIO
 
+import wave
+import contextlib
+
 import time
 
 # import Adafruit_GPIO.SPI as SPI
@@ -210,6 +213,13 @@ class OLED_UI( object ) :
     def play_sound( self, path ) :
         os.system('play ' + path + ' &')
 
+    def get_sound_duration( self, path ) :
+        with contextlib.closing( wave.open( fname, 'r' ) ) as f :
+            frames = f.getnframes()
+            rate = f.getframerate()
+            duration = frames / float(rate)
+            print(duration)
+
     def get_keypad_key( self ) :
 
         # Set all columns as output low
@@ -286,6 +296,7 @@ try :
             UI.play_sound( UI.sound[digit] )
             UI.update_ui_state( 'history' ) # reset interface
             digit = None
+            UI.get_sound_duration( UI.sound[digit] )
 
 
         UI.disp.display()
