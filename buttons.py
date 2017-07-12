@@ -293,7 +293,7 @@ try :
 
         if digit != None :
             print digit
-            UI.play_sound( UI.sound[digit] )
+            UI.play_sound( UI.soundboard[digit] )
             UI.update_ui_state( 'history' ) # reset interface
             digit = None
             UI.get_sound_duration( UI.soundboard[digit] )
