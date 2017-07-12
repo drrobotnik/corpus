@@ -296,7 +296,7 @@ try :
             UI.play_sound( UI.sound[digit] )
             UI.update_ui_state( 'history' ) # reset interface
             digit = None
-            UI.get_sound_duration( UI.sound[digit] )
+            UI.get_sound_duration( UI.soundboard[digit] )
 
 
         UI.disp.display()
