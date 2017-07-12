@@ -154,9 +154,6 @@ class OLED_UI( object ) :
 
     def direction_event( self, obj ) :
         current_line = self.get_current_line()
-
-        print 'direction_event: '
-        print obj
         
         if self.U_pin == obj :
             new_line = current_line + 1
@@ -253,6 +250,7 @@ class OLED_UI( object ) :
 UI = OLED_UI()
 
 try :
+    digit = None
     while 1 :
         if not GPIO.input( UI.C_pin ) :
             catImage = Image.open( './happycat_oled_32.ppm' ).convert( '1' )
@@ -260,6 +258,15 @@ try :
         else :
             # Display image.
             UI.disp.image( UI.image )
+
+        
+        digit = UI.getKey()
+
+        if digit != None :
+            print digit
+            UI.update_ui_state( 'history' ) # reset interface
+            digit = None
+
 
         UI.disp.display()
         time.sleep( .01 )
