@@ -1,3 +1,4 @@
+import os
 import RPi.GPIO as GPIO
 
 import time
@@ -27,6 +28,21 @@ class OLED_UI( object ) :
     [4,5,6],
     [7,8,9],
     ["*",0,"#"]
+    ]
+
+    soundboard = [
+    './sound/0001.wav',
+    './sound/0002.wav',
+    './sound/0001.wav',
+    './sound/0002.wav',
+    './sound/0001.wav',
+    './sound/0002.wav',
+    './sound/0001.wav',
+    './sound/0002.wav',
+    './sound/0001.wav',
+    './sound/0002.wav',
+    './sound/0001.wav',
+    './sound/0002.wav',
     ]
 
     ROW         = [18,23,25,12]
@@ -191,6 +207,9 @@ class OLED_UI( object ) :
         print text
         return text
 
+    def play_sound( self, path ) :
+        os.system('play ' + path + ' &')
+
     def get_keypad_key( self ) :
 
         # Set all columns as output low
@@ -260,10 +279,11 @@ try :
             UI.disp.image( UI.image )
 
         
-        digit = UI.getKey()
+        digit = UI.get_keypad_key()
 
         if digit != None :
             print digit
+            UI.play_sound( './sound/' + self.sound[digit] )
             UI.update_ui_state( 'history' ) # reset interface
             digit = None
 
