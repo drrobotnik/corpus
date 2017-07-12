@@ -300,7 +300,7 @@ try :
 
 
         UI.disp.display()
-        time.sleep( .01 )
+        time.sleep( .25 )
 
 except KeyboardInterrupt: 
     GPIO.cleanup()
