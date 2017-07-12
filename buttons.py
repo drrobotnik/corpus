@@ -295,8 +295,8 @@ try :
             print digit
             UI.play_sound( UI.soundboard[digit] )
             UI.update_ui_state( 'history' ) # reset interface
-            digit = None
             UI.get_sound_duration( UI.soundboard[digit] )
+            digit = None
 
 
         UI.disp.display()
