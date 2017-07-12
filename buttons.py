@@ -1,6 +1,8 @@
 import os
 import RPi.GPIO as GPIO
 
+import pyinotify
+
 import wave
 import contextlib
 
@@ -12,6 +14,12 @@ import Adafruit_SSD1306
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+
+class ModHandler(pyinotify.ProcessEvent) :
+    # evt has useful properties, including pathname
+    def process_IN_CLOSE_WRITE(self, evt) :
+        print evt
+        os.system("sudo pkill -9 pocketsphinx")
 
 class OLED_UI( object ) :
 
@@ -85,6 +93,8 @@ class OLED_UI( object ) :
 
         GPIO.add_event_detect( self.L_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
         GPIO.add_event_detect( self.R_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
+
+        GPIO.add_event_detect( self.C_pin, GPIO.RISING, callback=self.asr_event, bouncetime=300 )
 
     def initialize_screen( self ) :
 
@@ -191,9 +201,24 @@ class OLED_UI( object ) :
             if self.R_pin : # clicked forward, regardless of UI state, play current line sound
                 # @TODO: play sound
                 self.update_ui_state( 'history' ) # reset interface
-            elif 'result' == ui_state and self.L_Pin : # clicked back on result line, return to history
+            elif 'result' == ui_state and self.L_pin : # clicked back on result line, return to history
                 self.update_ui_state( 'history' ) # reset interface
+            elif self.C_pin # Pushed down on dpad, run ASR
+                self.get_text_from_input( 'recording' )
+                self.start_asr()
 
+    def asr_event( self, obj ) :
+        self.update_ui_state( 'results' )
+
+    def start_asr() :
+        os.system("sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000/8000/48000 -inmic yes -adcdev plughw:1,0 2>./debug.log | tee ./words.log &")
+
+    def stop_asr() :
+        handler = ModHandler()
+        wm = pyinotify.WatchManager()
+        notifier = pyinotify.Notifier(wm, handler)
+        wdd = wm.add_watch(FILE, pyinotify.IN_CLOSE_WRITE)
+        notifier.loop()
 
     def get_text_from_input( text, x=0, top=-2 ) :
 
@@ -283,12 +308,8 @@ UI = OLED_UI()
 try :
     digit = None
     while 1 :
-        if not GPIO.input( UI.C_pin ) :
-            catImage = Image.open( './happycat_oled_32.ppm' ).convert( '1' )
-            UI.disp.image( catImage )
-        else :
-            # Display image.
-            UI.disp.image( UI.image )
+        # Display image.
+        UI.disp.image( UI.image )
 
         sleep = .25
         digit = UI.get_keypad_key()

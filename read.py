@@ -45,4 +45,4 @@ while i != 1 :
             i=1
  
             infile.close()
-            time.sleep(2)
+            time.sleep(.25)
