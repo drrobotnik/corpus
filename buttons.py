@@ -138,6 +138,8 @@ class OLED_UI( object ) :
         self.content = [x.strip() for x in content]
         self.list_len = len( self.content )
 
+        self.get_text_from_line( 0 )
+
     def get_current_line( self ) :
         return self.current_line
 
