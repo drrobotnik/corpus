@@ -232,6 +232,7 @@ class OLED_UI( object ) :
     def direction_event( self, obj ) :
         current_line = self.get_current_line()
         new_line = current_line
+        ui_state = self.ui_state
         
         if self.U_pin == obj :
             print "up"
@@ -253,23 +254,22 @@ class OLED_UI( object ) :
             print "left"
 
         if self.L_pin == obj or self.R_pin == obj :
-            ui_state = self.ui_state
             if self.R_pin == obj : # clicked forward, regardless of UI state, play current line sound
                 # @TODO: play sound
                 self.update_ui_state( 'history' ) # reset interface
             elif 'result' == ui_state and self.L_pin == obj : # clicked back on result line, return to history
                 self.update_ui_state( 'history' ) # reset interface
 
-        if self.C_pin == obj : # Pushed down on dpad, run ASR
-            self.get_text_from_input( 'recording' )
-            self.start_asr()
+        if 'recording' !== ui_state && self.C_pin == obj : # Pushed down on dpad, run ASR
+            self.asr_event()
 
-    def asr_event( self, obj ) :
-        self.update_ui_state( 'results' )
+    def asr_event( self ) :
+        self.update_ui_state( 'recording' )
+        self.start_asr()
 
     def start_asr( self ) :
         # self.notifier.loop()
-        os.system("sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000/8000/48000 -inmic yes -adcdev plughw:1,0 2>./debug.log | tee ./words.log &")
+        os.system("sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000 -inmic yes -adcdev plughw:1,0 -logfn /dev/null | tee ./words.log &")
 
     def get_text_from_input( self, text, x=0, top=-2 ) :
 
