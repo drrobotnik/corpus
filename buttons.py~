@@ -20,12 +20,9 @@ from PIL import ImageFont
 
 class ModHandler(pyinotify.ProcessEvent) :
     # evt has useful properties, including pathname
-#    def process_IN_MODIFY( self, event ) :
-#        print event
-#        os.system("sudo pkill -9 pocketsphinx")
-    def process_IN_CLOSE_WRITE( self, event ) :
+    def process_IN_MODIFY( self, event ) :
         print event
-#        os.system("sudo pkill -9 pocketsphinx")
+        os.system("sudo pkill -9 pocketsphinx")
 
 class OLED_UI( object ) :
 
@@ -88,7 +85,7 @@ class OLED_UI( object ) :
         self.notifier = pyinotify.ThreadedNotifier( self.wm, default_proc_fun=ModHandler(s1) )
         #self.notifier.loop()
         self.notifier.start()
-        self.wm.add_watch('./words.log', pyinotify.ALL_EVENTS, rec=True, auto_add=True)
+        self.wm.add_watch('./words.log', pyinotify.IN_MODIFY, rec=True, auto_add=True)
 
     def initialize_GPIO( self ) :
 
