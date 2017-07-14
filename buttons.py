@@ -156,11 +156,11 @@ class OLED_UI( object ) :
     def set_current_line( self, line ) :
         list_len = self.list_len
 
-        if( line >= list_len ) :
-            line = list_len
-
-        if ( line <= 0 ) :
+        if( line >= list_len ) : # if we've reached the end of the list, loop back around
             line = 0
+
+        if ( line < 0 ) : # if we're trying to go before the beginning of our list, jump to the end
+            line = list_len - 1
 
         self.current_line = line
         return line
@@ -185,6 +185,7 @@ class OLED_UI( object ) :
 
     def direction_event( self, obj ) :
         current_line = self.get_current_line()
+        new_line = current_line
         
         if self.U_pin == obj :
             new_line = current_line + 1
@@ -192,18 +193,19 @@ class OLED_UI( object ) :
             new_line = current_line - 1
         
         if self.U_pin == obj or self.D_pin == obj :
-            new_line = self.set_current_line( new_line )
-            self.get_text_from_line( new_line )
-            print new_line
+            line = self.set_current_line( new_line )
+            self.get_text_from_line( line )
+            print line
 
         if self.L_pin == obj or self.R_pin == obj :
             ui_state = self.ui_state
-            if self.R_pin : # clicked forward, regardless of UI state, play current line sound
+            if self.R_pin == obj : # clicked forward, regardless of UI state, play current line sound
                 # @TODO: play sound
                 self.update_ui_state( 'history' ) # reset interface
-            elif 'result' == ui_state and self.L_pin : # clicked back on result line, return to history
+            elif 'result' == ui_state and self.L_pin == obj : # clicked back on result line, return to history
                 self.update_ui_state( 'history' ) # reset interface
-            elif self.C_pin # Pushed down on dpad, run ASR
+            elif self.C_pin == obj : # Pushed down on dpad, run ASR
+                print "record"
                 self.get_text_from_input( 'recording' )
                 self.start_asr()
 
@@ -229,8 +231,10 @@ class OLED_UI( object ) :
         return text
 
     def get_text_from_line( self, line, x=0, top=-2 ) :
+        new_line = self.set_current_line( line )
+
         draw = self.draw
-        text = self.content[ line ]
+        text = self.content[ new_line ]
         draw.rectangle( (0, 0, self.width, self.height ), outline=0, fill=0 )
         draw.text( (x, top ), str( text ),  font=self.font, fill=255 )
 
