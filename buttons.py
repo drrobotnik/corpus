@@ -69,7 +69,7 @@ class OLED_UI( object ) :
     previous_text = ''
     content = ''
 
-    def __init__( self) :
+    def __init__( self ) :
         self.initialize_GPIO()
         self.setup_GPIO_events()
         self.initialize_screen()
@@ -79,7 +79,7 @@ class OLED_UI( object ) :
         ui_state = self.ui_state
         self.update_ui_state( ui_state )
 
-    def initialize_notifier() :
+    def initialize_notifier( self ) :
         self.wm = pyinotify.WatchManager()
         self.notifier = pyinotify.Notifier( self.wm )
         self.wm.add_watch( './words.log', pyinotify.IN_CLOSE_WRITE )
