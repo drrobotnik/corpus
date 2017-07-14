@@ -1,6 +1,9 @@
 import os
 import RPi.GPIO as GPIO
 
+import os
+import mysql.connector
+
 import pyinotify
 
 import wave
@@ -15,11 +18,12 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-class ModHandler(pyinotify.ProcessEvent) :
-    # evt has useful properties, including pathname
-    def process_IN_CLOSE_WRITE(self, evt) :
-        print evt
-        os.system("sudo pkill -9 pocketsphinx")
+# @TODO: remove
+#class ModHandler(pyinotify.ProcessEvent) :
+#    # evt has useful properties, including pathname
+#    def process_IN_CLOSE_WRITE(self, evt) :
+#        print evt
+#        os.system("sudo pkill -9 pocketsphinx")
 
 class OLED_UI( object ) :
 
@@ -70,9 +74,15 @@ class OLED_UI( object ) :
         self.setup_GPIO_events()
         self.initialize_screen()
         self.get_keypad_key()
+        self.initialize_notifier()
 
         ui_state = self.ui_state
         self.update_ui_state( ui_state )
+
+    def initialize_notifier() :
+        self.wm = pyinotify.WatchManager()
+        self.notifier = pyinotify.Notifier( self.wm )
+        self.wm.add_watch( './words.log', pyinotify.IN_CLOSE_WRITE )
 
     def initialize_GPIO( self ) :
 
@@ -94,7 +104,7 @@ class OLED_UI( object ) :
         GPIO.add_event_detect( self.L_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
         GPIO.add_event_detect( self.R_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
 
-        GPIO.add_event_detect( self.C_pin, GPIO.RISING, callback=self.asr_event, bouncetime=300 )
+        # GPIO.add_event_detect( self.C_pin, GPIO.RISING, callback=self.asr_event, bouncetime=300 )
 
     def initialize_screen( self ) :
 
@@ -124,6 +134,36 @@ class OLED_UI( object ) :
 
         # Load default font.
         self.font = ImageFont.load_default()
+
+    def initialize_db( self ) :
+        self.db = mysql.connector.connect(
+            host="localhost",    # your host, usually localhost
+            user="homestead",         # your username
+            passwd="secret",  # your password
+            db="rickandmorty",
+            port="33060")
+
+    def full_text_search( self, text ) :
+        # you must create a Cursor object. It will let
+        #  you execute all the queries you need
+        cur = self.db.cursor( buffered=True )
+
+        query = ( 
+            "SELECT id, body, "
+            "MATCH (body) AGAINST (%s IN NATURAL LANGUAGE MODE) AS score "
+            "FROM dictionary "
+            "WHERE MATCH (body) AGAINST (%s IN NATURAL LANGUAGE MODE) "
+            "ORDER BY score DESC")
+
+        # Use all the SQL you like
+        cur.execute(query, ( text, text ) )
+        # Iterate through the result of curA
+        for (body) in cur :
+            print body[0]
+
+            # Commit the changes
+            db.commit()
+
 
     def get_ui_state( self ) :
         return self.ui_state
@@ -211,14 +251,13 @@ class OLED_UI( object ) :
         self.update_ui_state( 'results' )
 
     def start_asr() :
+        self.notifier.loop( daemonize=True, callback=self.stop_asr )
         os.system("sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000/8000/48000 -inmic yes -adcdev plughw:1,0 2>./debug.log | tee ./words.log &")
 
-    def stop_asr() :
-        handler = ModHandler()
-        wm = pyinotify.WatchManager()
-        notifier = pyinotify.Notifier(wm, handler)
-        wdd = wm.add_watch(FILE, pyinotify.IN_CLOSE_WRITE)
-        notifier.loop()
+    def stop_asr( obj ) :
+        sys.stdout.write("Exit\n")
+        notifier.stop()
+        sys.exit(0)
 
     def get_text_from_input( text, x=0, top=-2 ) :
 
