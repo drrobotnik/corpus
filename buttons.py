@@ -31,11 +31,11 @@ class OLED_UI( object ) :
     RST_pin = 24
 
     # Input pins:
-    L_pin = 5
-    R_pin = 13
+    R_pin = 5
+    L_pin = 13
     C_pin = 26
-    U_pin = 19
-    D_pin = 6
+    D_pin = 19
+    U_pin = 6
 
     # CONSTANTS   
     KEYPAD = [
@@ -82,7 +82,7 @@ class OLED_UI( object ) :
     def initialize_notifier( self ) :
         self.wm = pyinotify.WatchManager()
         self.notifier = pyinotify.Notifier( self.wm )
-        self.wm.add_watch( './words.log', pyinotify.IN_CLOSE_WRITE )
+        self.wm.add_watch( './words.log', pyinotify.IN_MODIFY )
 
     def initialize_GPIO( self ) :
 
@@ -104,7 +104,7 @@ class OLED_UI( object ) :
         GPIO.add_event_detect( self.L_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
         GPIO.add_event_detect( self.R_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
 
-        # GPIO.add_event_detect( self.C_pin, GPIO.RISING, callback=self.asr_event, bouncetime=300 )
+        GPIO.add_event_detect( self.C_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
 
     def initialize_screen( self ) :
 
@@ -228,14 +228,23 @@ class OLED_UI( object ) :
         new_line = current_line
         
         if self.U_pin == obj :
+            print "up"
             new_line = current_line + 1
         elif self.D_pin == obj :
+            print "down"
             new_line = current_line - 1
         
         if self.U_pin == obj or self.D_pin == obj :
             line = self.set_current_line( new_line )
             self.get_text_from_line( line )
             print line
+
+
+        if self.R_pin == obj :
+            print "right"
+
+        if self.L_pin == obj :
+            print "left"
 
         if self.L_pin == obj or self.R_pin == obj :
             ui_state = self.ui_state
@@ -244,27 +253,29 @@ class OLED_UI( object ) :
                 self.update_ui_state( 'history' ) # reset interface
             elif 'result' == ui_state and self.L_pin == obj : # clicked back on result line, return to history
                 self.update_ui_state( 'history' ) # reset interface
-            elif self.C_pin == obj : # Pushed down on dpad, run ASR
-                print "record"
-                self.get_text_from_input( 'recording' )
-                self.start_asr()
+
+        if self.C_pin == obj : # Pushed down on dpad, run ASR
+            print "record"
+            self.get_text_from_input( 'recording' )
+            self.start_asr()
 
     def asr_event( self, obj ) :
         self.update_ui_state( 'results' )
 
-    def start_asr() :
+    def start_asr( self ) :
         self.notifier.loop( daemonize=True, callback=self.stop_asr )
         os.system("sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000/8000/48000 -inmic yes -adcdev plughw:1,0 2>./debug.log | tee ./words.log &")
 
     def stop_asr( obj ) :
-        sys.stdout.write("Exit\n")
+        print obj
+        #sys.stdout.write("Exit\n")
         notifier.stop()
-        sys.exit(0)
+        #sys.exit(0)
 
-    def get_text_from_input( text, x=0, top=-2 ) :
+    def get_text_from_input( self, text, x=0, top=-2 ) :
 
         self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
-        self.draw.text( (x, top), str( text ),  font=font, fill=255 )
+        self.draw.text( (x, top), str( text ),  font=self.font, fill=255 )
 
         print text
         return text
