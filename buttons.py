@@ -255,7 +255,6 @@ class OLED_UI( object ) :
                 self.update_ui_state( 'history' ) # reset interface
 
         if self.C_pin == obj : # Pushed down on dpad, run ASR
-            print "record"
             self.get_text_from_input( 'recording' )
             self.start_asr()
 
@@ -269,7 +268,7 @@ class OLED_UI( object ) :
     def stop_asr( obj ) :
         print obj
         #sys.stdout.write("Exit\n")
-        notifier.stop()
+        self.notifier.stop()
         #sys.exit(0)
 
     def get_text_from_input( self, text, x=0, top=-2 ) :
