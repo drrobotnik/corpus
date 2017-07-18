@@ -145,7 +145,7 @@ class OLED_UI( object ) :
             # Load default font.
             self.font = ImageFont.load_default()
         except : 
-            print "no screen connected in pin #" + self.RST_pin
+            print "no screen connected in pin #" + str( self.RST_pin )
 
     def initialize_db( self ) :
         self.db = mysql.connector.connect(
