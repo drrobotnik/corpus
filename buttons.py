@@ -116,32 +116,36 @@ class OLED_UI( object ) :
 
     def initialize_screen( self ) :
 
-        disp = Adafruit_SSD1306.SSD1306_128_32( rst=self.RST_pin )
-        self.disp = disp
+        try :
 
-        # Initialize library.
-        self.disp.begin()
+            disp = Adafruit_SSD1306.SSD1306_128_32( rst=self.RST_pin )
+            self.disp = disp
 
-        # Clear display.
-        self.disp.clear()
-        self.disp.display()
+            # Initialize library.
+            self.disp.begin()
 
-        # Create blank image for drawing.
-        # Make sure to create image with mode '1' for 1-bit color.
-        self.width = self.disp.width
-        self.height = self.disp.height
-        self.image = Image.new( '1', ( self.width, self.height ) )
+            # Clear display.
+            self.disp.clear()
+            self.disp.display()
 
-        # Get drawing object to draw on image.
-        self.draw = ImageDraw.Draw( self.image )
+            # Create blank image for drawing.
+            # Make sure to create image with mode '1' for 1-bit color.
+            self.width = self.disp.width
+            self.height = self.disp.height
+            self.image = Image.new( '1', ( self.width, self.height ) )
 
-        # Draw a black filled box to clear the image.
-        self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
-        x = 0
-        top = -2
+            # Get drawing object to draw on image.
+            self.draw = ImageDraw.Draw( self.image )
 
-        # Load default font.
-        self.font = ImageFont.load_default()
+            # Draw a black filled box to clear the image.
+            self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
+            x = 0
+            top = -2
+
+            # Load default font.
+            self.font = ImageFont.load_default()
+        except : 
+            print "no screen connected in pin #" + self.RST_pin
 
     def initialize_db( self ) :
         self.db = mysql.connector.connect(
