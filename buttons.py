@@ -1,4 +1,5 @@
-import ConfigParser, os
+import ConfigParser, os, gc 
+
 import RPi.GPIO as GPIO
 
 import mysql.connector
@@ -172,7 +173,7 @@ class OLED_UI( object ) :
     def full_text_search( self, text ) :
         # you must create a Cursor object. It will let
         #  you execute all the queries you need
-        cur = self.db.cursor( buffered=True )
+        cursor = self.db.cursor( buffered=True )
 
         query = ( 
             "SELECT id, body, "
@@ -182,17 +183,17 @@ class OLED_UI( object ) :
             "ORDER BY score DESC")
 
         # Use all the SQL you like
-        cur.execute(query, ( text, text ) )
+        cursor.execute(query, ( text, text ) )
         # Iterate through the result of curA
+        result = cursor.fetchall()
 
-
-        for (body) in cur :
-            print body[0]
+        #for (body) in cur :
+            #print body[0]
 
             # Commit the changes
-            self.db.commit()
+            #self.db.commit()
 
-        return cur
+        return result
 
 
     def get_ui_state( self ) :
@@ -322,15 +323,17 @@ class OLED_UI( object ) :
         os.system( 'play ' + path + ' &' )
 
     def play_sound_from_text( self, text ) :
-        cur = self.full_text_search( text )
-
-        print cur[0]
+        result = self.full_text_search( text )
+        count = len( result )        
+        print count
+        print result[0][1]
         return
 
-        #for (body) in cur :
-        #    print body[0]
-        os.system( 'play ' + path + ' &' )
-
+        for row in result :
+            print body[0]
+        #os.system( 'play ' + path + ' &' )
+        print "done"
+        return
 
     def get_sound_duration( self, path ) :
         with contextlib.closing( wave.open( path, 'r' ) ) as f :
@@ -422,3 +425,5 @@ try :
 except KeyboardInterrupt: 
     GPIO.cleanup()
     UI.notifier.stop()
+    UI.db.commit()
+    gc.collect()
