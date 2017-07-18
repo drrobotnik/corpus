@@ -120,7 +120,6 @@ class OLED_UI( object ) :
     def initialize_screen( self ) :
 
         try :
-
             disp = Adafruit_SSD1306.SSD1306_128_32( rst=self.RST_pin )
             self.disp = disp
 
@@ -148,8 +147,7 @@ class OLED_UI( object ) :
             # Load default font.
             self.font = ImageFont.load_default()
 
-            ui_state = self.ui_state
-            self.update_ui_state( ui_state )
+            self.update_ui_state( self.ui_state )
 
         except : 
             self.screen_disconnected = 'disconnected'
@@ -202,8 +200,8 @@ class OLED_UI( object ) :
     def update_ui_state( self, state ) :
         # File based directional UI
 
-        if self.screen_disconnected :
-            return
+        #if self.screen_disconnected :
+        #    return
 
         # define default
         file = './history.log'
@@ -417,7 +415,6 @@ try :
             UI.update_ui_state( 'history' ) # reset interface
             sleep = UI.get_sound_duration( UI.soundboard[digit] )
             digit = None
-
 
         UI.disp.display()
         time.sleep( sleep )
