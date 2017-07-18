@@ -164,11 +164,15 @@ class OLED_UI( object ) :
         # Use all the SQL you like
         cur.execute(query, ( text, text ) )
         # Iterate through the result of curA
+
+
         for (body) in cur :
             print body[0]
 
             # Commit the changes
             db.commit()
+
+        return cur
 
 
     def get_ui_state( self ) :
@@ -291,7 +295,18 @@ class OLED_UI( object ) :
         return text
 
     def play_sound( self, path ) :
-        os.system('play ' + path + ' &')
+        os.system( 'play ' + path + ' &' )
+
+    def play_sound_from_text( self, text ) :
+        cur = self.full_text_search( text )
+
+        print cur[0]
+        return
+
+        #for (body) in cur :
+        #    print body[0]
+        os.system( 'play ' + path + ' &' )
+
 
     def get_sound_duration( self, path ) :
         with contextlib.closing( wave.open( path, 'r' ) ) as f :
@@ -357,6 +372,8 @@ class OLED_UI( object ) :
             GPIO.setup( self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_UP )
 
 UI = OLED_UI()
+
+UI.play_sound_from_text("MORTY")
 
 try :
     digit = None
