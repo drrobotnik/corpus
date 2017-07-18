@@ -3,3 +3,5 @@ config.php
 *.cfg
 sound/s*.wav
 sound/s*.mp3
+*.sql
+!corpus.sql
