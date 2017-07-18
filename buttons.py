@@ -1,7 +1,6 @@
-import os
+import ConfigParser, os
 import RPi.GPIO as GPIO
 
-import os
 import mysql.connector
 
 import pyinotify
@@ -74,14 +73,17 @@ class OLED_UI( object ) :
     content = ''
 
     def __init__( self ) :
+        self.initialize_config()
         self.initialize_GPIO()
         self.setup_GPIO_events()
+        self.initialize_db()
         self.initialize_screen()
         self.get_keypad_key()
         self.initialize_notifier()
 
-        ui_state = self.ui_state
-        self.update_ui_state( ui_state )
+    def initialize_config( self ) :
+        self.config = ConfigParser.ConfigParser()
+        self.config.read('settings.cfg')
 
     def initialize_notifier( self ) :
         self.wm = pyinotify.WatchManager()
@@ -144,16 +146,28 @@ class OLED_UI( object ) :
 
             # Load default font.
             self.font = ImageFont.load_default()
+
+            ui_state = self.ui_state
+            self.update_ui_state( ui_state )
+
         except : 
+            self.screen_disconnected = 'disconnected'
             print "no screen connected in pin #" + str( self.RST_pin )
 
     def initialize_db( self ) :
+        config = self.config
+        db_host = config.get('MYSQL', 'db_host')
+        db_user = config.get('MYSQL', 'db_user')
+        db_password = config.get('MYSQL', 'db_password')
+        db_port = config.get('MYSQL', 'db_port')
+        db_name = config.get('MYSQL', 'db_name')
+
         self.db = mysql.connector.connect(
-            host="localhost",    # your host, usually localhost
-            user="homestead",         # your username
-            passwd="secret",  # your password
-            db="rickandmorty",
-            port="33060")
+            host=db_host,    # your host, usually localhost
+            user=db_user,         # your username
+            passwd=db_password,  # your password
+            db=db_name,
+            port=db_port)
 
     def full_text_search( self, text ) :
         # you must create a Cursor object. It will let
@@ -176,7 +190,7 @@ class OLED_UI( object ) :
             print body[0]
 
             # Commit the changes
-            db.commit()
+            self.db.commit()
 
         return cur
 
@@ -186,6 +200,9 @@ class OLED_UI( object ) :
 
     def update_ui_state( self, state ) :
         # File based directional UI
+
+        if self.screen_disconnected :
+            return
 
         # define default
         file = './history.log'

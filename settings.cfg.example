@@ -1,0 +1,6 @@
+[MYSQL]
+db_host=localhost
+db_user=XXXXX
+db_password=XXXXXX
+db_name=XXXXXX
+db_port=3306
