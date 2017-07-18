@@ -20,12 +20,14 @@ from PIL import ImageFont
 
 class ModHandler(pyinotify.ProcessEvent) :
     # evt has useful properties, including pathname
-#    def process_IN_MODIFY( self, event ) :
-#        print event
-#        os.system("sudo pkill -9 pocketsphinx")
+    def process_IN_MODIFY( self, event ) :
+        print "IN_MODIFY"
+        os.system("sudo pkill -9 pocketsphinx")
+        UI.notifier.stop()
     def process_IN_CLOSE_WRITE( self, event ) :
-        print event
-#        os.system("sudo pkill -9 pocketsphinx")
+        print "IN_CLOSE_WRITE"
+        os.system("sudo pkill -9 pocketsphinx")
+        UI.notifier.stop()
 
 class OLED_UI( object ) :
 
@@ -87,7 +89,7 @@ class OLED_UI( object ) :
         #self.notifier = pyinotify.ThreadedNotifier( self.wm )
         self.notifier = pyinotify.ThreadedNotifier( self.wm, default_proc_fun=ModHandler(s1) )
         #self.notifier.loop()
-        self.notifier.start()
+        #self.notifier.start()
         self.wm.add_watch('./words.log', pyinotify.ALL_EVENTS, rec=True, auto_add=True)
 
     def initialize_GPIO( self ) :
@@ -264,7 +266,7 @@ class OLED_UI( object ) :
             elif 'result' == ui_state and self.L_pin == obj : # clicked back on result line, return to history
                 self.update_ui_state( 'history' ) # reset interface
 
-        if 'recording' !== ui_state && self.C_pin == obj : # Pushed down on dpad, run ASR
+        if 'recording' != ui_state and self.C_pin == obj : # Pushed down on dpad, run ASR
             self.asr_event()
 
     def asr_event( self ) :
@@ -274,6 +276,7 @@ class OLED_UI( object ) :
     def start_asr( self ) :
         # self.notifier.loop()
         os.system("sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000 -inmic yes -adcdev plughw:1,0 -logfn /dev/null | tee ./words.log &")
+        self.notifier.start()
 
     def get_text_from_input( self, text, x=0, top=-2 ) :
 
