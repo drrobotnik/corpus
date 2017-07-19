@@ -280,11 +280,11 @@ class OLED_UI( object ) :
             lineList = fileHandle.readlines()
             fileHandle.close()
 
-            if lineList[ -1 ] != self.last_line and self.last_line != "" :
-                self.last_line = lineList[-1]
+            if lineList[ -1 ] != self.asr_result and self.asr_result != "" :
+                self.asr_result = lineList[-1]
                 loop = False
-                print self.last_line
-                self.get_text_from_input( self.last_line )
+                print self.asr_result
+                self.get_text_from_input( self.asr_result )
                 self.stop_asr()
 
             time.sleep( .2 )
