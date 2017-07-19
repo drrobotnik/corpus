@@ -258,7 +258,7 @@ class OLED_UI( object ) :
                 self.asr_event()
 
     def asr_event( self ) :
-        self.update_ui_state( 'recording' )
+        # self.update_ui_state( 'recording' )
         self.get_text_from_input( 'recording' )
         self.start_asr()
 
