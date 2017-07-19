@@ -302,7 +302,9 @@ class OLED_UI( object ) :
 
             if lineList[-1] != self.last_line and self.last_line != ""
                 self.last_line = lineList[-1]
-                loop = false
+                loop = False
+                print self.last_line
+                get_text_from_input( self.last_line )
                 self.stop_asr()
 
             time.sleep( .2 )
