@@ -18,17 +18,6 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-class ModHandler(pyinotify.ProcessEvent) :
-    # evt has useful properties, including pathname
-    def process_IN_MODIFY( self, event ) :
-        print "IN_MODIFY"
-        os.system("sudo pkill -9 pocketsphinx")
-        UI.notifier.stop()
-    def process_IN_CLOSE_WRITE( self, event ) :
-        print "IN_CLOSE_WRITE"
-        os.system("sudo pkill -9 pocketsphinx")
-        UI.notifier.stop()
-
 class OLED_UI( object ) :
 
     # oled RST pin
@@ -176,12 +165,6 @@ class OLED_UI( object ) :
         # Iterate through the result of curA
         result = cursor.fetchall()
 
-        #for (body) in cur :
-            #print body[0]
-
-            # Commit the changes
-            #self.db.commit()
-
         return result
 
 
@@ -190,9 +173,6 @@ class OLED_UI( object ) :
 
     def update_ui_state( self, state ) :
         # File based directional UI
-
-        #if self.screen_disconnected :
-        #    return
 
         # define default
         file = './history.log'
@@ -295,8 +275,8 @@ class OLED_UI( object ) :
 
         loop = True
 
-        while loop :
-            fileHandle = open ( 'words.log', 'r' )
+        while loop is True :
+            fileHandle = open ( './words.log', 'r' )
             lineList = fileHandle.readlines()
             fileHandle.close()
 
@@ -304,7 +284,7 @@ class OLED_UI( object ) :
                 self.last_line = lineList[-1]
                 loop = False
                 print self.last_line
-                get_text_from_input( self.last_line )
+                self.get_text_from_input( self.last_line )
                 self.stop_asr()
 
             time.sleep( .2 )
@@ -407,9 +387,12 @@ class OLED_UI( object ) :
         for j in range( len( self.COLUMN ) ) :
             GPIO.setup( self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_UP )
 
+    def loop( self ) :
+        print "looping"
+
 UI = OLED_UI()
 
-UI.play_sound_from_text("MORTY")
+UI.loop()
 
 try :
     digit = None
@@ -432,6 +415,5 @@ try :
 
 except KeyboardInterrupt: 
     GPIO.cleanup()
-    UI.notifier.stop()
     UI.db.commit()
     gc.collect()
