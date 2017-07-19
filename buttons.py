@@ -305,6 +305,8 @@ class OLED_UI( object ) :
                 loop = false
                 self.stop_asr()
 
+            time.sleep( .2 )
+
     def get_text_from_input( self, text, x=0, top=-2 ) :
 
         self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
