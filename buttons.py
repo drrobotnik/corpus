@@ -72,6 +72,7 @@ class OLED_UI( object ) :
     list_len = 0
     previous_text = ''
     content = ''
+    asr_result = ''
 
     def __init__( self ) :
         self.initialize_config()
@@ -80,20 +81,10 @@ class OLED_UI( object ) :
         self.initialize_db()
         self.initialize_screen()
         self.get_keypad_key()
-        self.initialize_notifier()
 
     def initialize_config( self ) :
         self.config = ConfigParser.ConfigParser()
         self.config.read('settings.cfg')
-
-    def initialize_notifier( self ) :
-        self.wm = pyinotify.WatchManager()
-        s1 = pyinotify.Stats()
-        #self.notifier = pyinotify.ThreadedNotifier( self.wm )
-        self.notifier = pyinotify.ThreadedNotifier( self.wm, default_proc_fun=ModHandler(s1) )
-        #self.notifier.loop()
-        #self.notifier.start()
-        self.wm.add_watch('./words.log', pyinotify.ALL_EVENTS, rec=True, auto_add=True)
 
     def initialize_GPIO( self ) :
 
@@ -294,9 +285,25 @@ class OLED_UI( object ) :
         self.start_asr()
 
     def start_asr( self ) :
-        # self.notifier.loop()
-        os.system("sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000 -inmic yes -adcdev plughw:1,0 -logfn /dev/null | tee ./words.log &")
-        self.notifier.start()
+        os.system( "sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000 -inmic yes -adcdev plughw:1,0 -logfn /dev/null | tee ./words.log &" )
+        self.poll_asr_results()
+
+    def stop_asr( self ) :
+        os.system( "sudo pkill -9 pocketsphinx" )
+
+    def poll_asr_results( self ) :
+
+        loop = True
+
+        while loop :
+            fileHandle = open ( 'words.log', 'r' )
+            lineList = fileHandle.readlines()
+            fileHandle.close()
+
+            if lineList[-1] != self.last_line and self.last_line != ""
+                self.last_line = lineList[-1]
+                loop = false
+                self.stop_asr()
 
     def get_text_from_input( self, text, x=0, top=-2 ) :
 
