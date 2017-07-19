@@ -274,10 +274,12 @@ class OLED_UI( object ) :
     def poll_asr_results( self ) :
 
         loop = True
+        loop_iteration = 0
 
         while loop is True :
             time.sleep( .2 ) # sleep in order to allow ASR to load and start processing.
-
+            # print loop_iteration
+            loop_iteration = loop_iteration + 1
             file = './words.log'
 
             with open( file ) as f :
@@ -286,16 +288,16 @@ class OLED_UI( object ) :
             content = [x.strip() for x in content]
             list_len = len( content )
 
-            print content
-            print list_len
-            print content[ list_len -1 ]
+            if list_len > 0 :
 
-            if list_len > 0 and content[ list_len -1 ] != self.asr_result and self.asr_result != "" :
-                self.asr_result = content[ list_len -1 ]
-                loop = False
-                print self.asr_result
-                self.get_text_from_input( self.asr_result )
-                self.stop_asr()
+                last_line = content[ list_len -1 ]
+
+                if last_line != self.asr_result and last_line != "" :
+                    self.asr_result = content[ list_len -1 ]
+                    loop = False
+                    print self.asr_result
+                    self.get_text_from_input( self.asr_result )
+                    self.stop_asr()
 
     def get_text_from_input( self, text, x=0, top=-2 ) :
 
