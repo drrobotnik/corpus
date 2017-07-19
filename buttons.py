@@ -389,31 +389,29 @@ class OLED_UI( object ) :
 
     def loop( self ) :
         print "looping"
+        try :
+    digit = None
+        while 1 :
+            # Display image.
+            self.disp.image( self.image )
+
+            sleep = .25
+            digit = self.get_keypad_key()
+
+            if digit != None :
+                print digit
+                self.play_sound( self.soundboard[digit] )
+                self.update_ui_state( 'history' ) # reset interface
+                sleep = self.get_sound_duration( self.soundboard[digit] )
+                digit = None
+
+            self.disp.display()
+            time.sleep( sleep )
+
+    except KeyboardInterrupt: 
+        GPIO.cleanup()
+        self.db.commit()
+        gc.collect()
 
 UI = OLED_UI()
-
 UI.loop()
-
-try :
-    digit = None
-    while 1 :
-        # Display image.
-        UI.disp.image( UI.image )
-
-        sleep = .25
-        digit = UI.get_keypad_key()
-
-        if digit != None :
-            print digit
-            UI.play_sound( UI.soundboard[digit] )
-            UI.update_ui_state( 'history' ) # reset interface
-            sleep = UI.get_sound_duration( UI.soundboard[digit] )
-            digit = None
-
-        UI.disp.display()
-        time.sleep( sleep )
-
-except KeyboardInterrupt: 
-    GPIO.cleanup()
-    UI.db.commit()
-    gc.collect()
