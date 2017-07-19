@@ -32,14 +32,17 @@ class ModHandler(pyinotify.ProcessEvent) :
 class OLED_UI( object ) :
 
     # oled RST pin
-    RST_pin = 24
+    RST_pin = 4
 
     # Input pins:
-    R_pin = 5
-    L_pin = 13
-    C_pin = 26
-    D_pin = 19
-    U_pin = 6
+    R_pin = 25
+    L_pin = 14
+    C_pin = 15
+    D_pin = 24
+    U_pin = 23
+
+    ROW         = [19,13,6,5]
+    COLUMN      = [0,16,12]
 
     # CONSTANTS   
     KEYPAD = [
@@ -63,9 +66,6 @@ class OLED_UI( object ) :
     './sound/0001.wav',
     './sound/0002.wav',
     ]
-
-    ROW         = [18,23,25,12]
-    COLUMN      = [21,20,16]
 
     ui_state = 'history'
     current_line = 0
