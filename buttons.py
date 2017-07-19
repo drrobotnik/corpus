@@ -99,39 +99,34 @@ class OLED_UI( object ) :
 
     def initialize_screen( self ) :
 
-        try :
-            disp = Adafruit_SSD1306.SSD1306_128_32( rst=self.RST_pin )
-            self.disp = disp
+        disp = Adafruit_SSD1306.SSD1306_128_32( rst=self.RST_pin )
+        self.disp = disp
 
-            # Initialize library.
-            self.disp.begin()
+        # Initialize library.
+        self.disp.begin()
 
-            # Clear display.
-            self.disp.clear()
-            self.disp.display()
+        # Clear display.
+        self.disp.clear()
+        self.disp.display()
 
-            # Create blank image for drawing.
-            # Make sure to create image with mode '1' for 1-bit color.
-            self.width = self.disp.width
-            self.height = self.disp.height
-            self.image = Image.new( '1', ( self.width, self.height ) )
+        # Create blank image for drawing.
+        # Make sure to create image with mode '1' for 1-bit color.
+        self.width = self.disp.width
+        self.height = self.disp.height
+        self.image = Image.new( '1', ( self.width, self.height ) )
 
-            # Get drawing object to draw on image.
-            self.draw = ImageDraw.Draw( self.image )
+        # Get drawing object to draw on image.
+        self.draw = ImageDraw.Draw( self.image )
 
-            # Draw a black filled box to clear the image.
-            self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
-            x = 0
-            top = -2
+        # Draw a black filled box to clear the image.
+        self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
+        x = 0
+        top = -2
 
-            # Load default font.
-            self.font = ImageFont.load_default()
+        # Load default font.
+        self.font = ImageFont.load_default()
 
-            self.update_ui_state( self.ui_state )
-
-        except : 
-            self.screen_disconnected = 'disconnected'
-            print "no screen connected in pin #" + str( self.RST_pin )
+        self.update_ui_state( self.ui_state )
 
     def initialize_db( self ) :
         config = self.config
