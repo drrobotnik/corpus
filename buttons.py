@@ -290,7 +290,7 @@ class OLED_UI( object ) :
             print list_len
             print content[ list_len -1 ]
 
-            if content[ list_len -1 ] != self.asr_result and self.asr_result != "" :
+            if list_len > 0 and content[ list_len -1 ] != self.asr_result and self.asr_result != "" :
                 self.asr_result = content[ list_len -1 ]
                 loop = False
                 print self.asr_result
