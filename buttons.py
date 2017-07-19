@@ -149,7 +149,7 @@ class OLED_UI( object ) :
         cursor = self.db.cursor( buffered=True )
 
         query = ( 
-            "SELECT id, body, "
+            "SELECT body, "
             "MATCH (body) AGAINST (%s IN NATURAL LANGUAGE MODE) AS score "
             "FROM dictionary "
             "WHERE MATCH (body) AGAINST (%s IN NATURAL LANGUAGE MODE) "
@@ -158,11 +158,16 @@ class OLED_UI( object ) :
         # Use all the SQL you like
         cursor.execute( query, ( text, text ) )
         # Iterate through the result of curA
-        result = cursor.fetchall()
-        f = open('./results.log', 'w')
-        f.write( result )
+        results = cursor.fetchall()
 
-        return result
+        if results is not None :
+            with open('./results.log', 'w') as f:
+                for row in results:
+                    print row
+                    f.write("%s\n" % str(row))
+                return results
+
+        return False
 
     def text_search( self, text ) :
         cursor = self.db.cursor( buffered=True )
@@ -367,12 +372,13 @@ class OLED_UI( object ) :
 
         while count is not None :
             print count
-            dict_id result[0][0]
+            dict_id = result[0][0]
 
         if dict_id is not None :
             sounds = self.sound_search( dict_id )
+            print sounds
 
-        if sounds is not None :
+        #if sounds is not None :
 
         
         return
@@ -456,9 +462,11 @@ class OLED_UI( object ) :
 
                 if digit != None :
                     print digit
-                    self.play_sound( self.soundboard[digit] )
+                    if type( digit ) is not str :
+                        self.play_sound( self.soundboard[ digit ] )
+                        sleep = self.get_sound_duration( self.soundboard[ digit ] )
+
                     self.update_ui_state( 'history' ) # reset interface
-                    sleep = self.get_sound_duration( self.soundboard[digit] )
                     digit = None
 
                 self.disp.display()
