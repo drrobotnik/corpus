@@ -253,7 +253,9 @@ class OLED_UI( object ) :
                 self.update_ui_state( 'history' ) # reset interface
 
         if 'recording' != ui_state and self.C_pin == obj : # Pushed down on dpad, run ASR
-            self.asr_event()
+            print "center pressed"
+            if 'recording' != ui_state :
+                self.asr_event()
 
     def asr_event( self ) :
         self.update_ui_state( 'recording' )
@@ -262,9 +264,12 @@ class OLED_UI( object ) :
     def start_asr( self ) :
         os.system( "sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000 -inmic yes -adcdev plughw:1,0 -logfn /dev/null | tee ./words.log &" )
         self.poll_asr_results()
+        self.get_text_from_input( 'recording' )
+        print recording
 
     def stop_asr( self ) :
         os.system( "sudo pkill -9 pocketsphinx" )
+        print "stop asr"
 
     def poll_asr_results( self ) :
 
@@ -275,7 +280,7 @@ class OLED_UI( object ) :
             lineList = fileHandle.readlines()
             fileHandle.close()
 
-            if lineList[-1] != self.last_line and self.last_line != "" :
+            if lineList[ -1 ] != self.last_line and self.last_line != "" :
                 self.last_line = lineList[-1]
                 loop = False
                 print self.last_line
@@ -410,6 +415,7 @@ class OLED_UI( object ) :
             GPIO.cleanup()
             self.db.commit()
             gc.collect()
+            self.stop_asr()
 
 UI = OLED_UI()
 UI.loop()
