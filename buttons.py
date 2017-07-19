@@ -300,7 +300,7 @@ class OLED_UI( object ) :
             lineList = fileHandle.readlines()
             fileHandle.close()
 
-            if lineList[-1] != self.last_line and self.last_line != ""
+            if lineList[-1] != self.last_line and self.last_line != "" :
                 self.last_line = lineList[-1]
                 loop = False
                 print self.last_line
