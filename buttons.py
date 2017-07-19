@@ -389,8 +389,11 @@ class OLED_UI( object ) :
 
     def loop( self ) :
         print "looping"
+        
         try :
-    digit = None
+        
+        digit = None
+        
         while 1 :
             # Display image.
             self.disp.image( self.image )
