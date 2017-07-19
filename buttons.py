@@ -156,9 +156,44 @@ class OLED_UI( object ) :
             "ORDER BY score DESC")
 
         # Use all the SQL you like
-        cursor.execute(query, ( text, text ) )
+        cursor.execute( query, ( text, text ) )
         # Iterate through the result of curA
         result = cursor.fetchall()
+        f = open('./results.log', 'w')
+        f.write( result )
+
+        return result
+
+    def text_search( self, text ) :
+        cursor = self.db.cursor( buffered=True )
+
+        query = ( 
+            "SELECT id, body, "
+            "FROM dictionary "
+            "WHERE (body=%s "
+            "LIMIT 1")
+
+        cursor.execute( query, ( text ) )
+        row = cursor.fetchone()
+        
+        while row is not None:
+            result = cursor.fetchone()
+
+        return result
+
+    def sound_search( self, dict_id ) :
+        cursor = self.db.cursor( buffered=True )
+
+        query = ( 
+            "SELECT sound_file, "
+            "FROM dictionary_meta "
+            "WHERE (dict_id=%s ")
+
+        cursor.execute( query, ( dict_id ) )
+        row = cursor.fetchall()
+        
+        while row is not None:
+            result = cursor.fetchone()
 
         return result
 
@@ -175,7 +210,7 @@ class OLED_UI( object ) :
         if( 'history' == state ) : # initial state is history
             file = './history.log'
         elif( 'results' == state ) : # ASR results
-            file = './words.log'
+            file = './results.log'
 
         with open( file ) as f :
             content = f.readlines()
@@ -224,6 +259,8 @@ class OLED_UI( object ) :
     def direction_event( self, obj ) :
         current_line = self.get_current_line()
         new_line = current_line
+        line = self.set_current_line( new_line )
+        text = self.get_text_from_line( line )
         ui_state = self.ui_state
         
         if self.U_pin == obj :
@@ -235,8 +272,7 @@ class OLED_UI( object ) :
         
         if self.U_pin == obj or self.D_pin == obj :
             line = self.set_current_line( new_line )
-            self.get_text_from_line( line )
-            print line
+            text = self.get_text_from_line( line )
 
 
         if self.R_pin == obj :
@@ -247,7 +283,7 @@ class OLED_UI( object ) :
 
         if self.L_pin == obj or self.R_pin == obj :
             if self.R_pin == obj : # clicked forward, regardless of UI state, play current line sound
-                # @TODO: play sound
+                self.play_sound_from_text( text )
                 self.update_ui_state( 'history' ) # reset interface
             elif 'result' == ui_state and self.L_pin == obj : # clicked back on result line, return to history
                 self.update_ui_state( 'history' ) # reset interface
@@ -258,17 +294,18 @@ class OLED_UI( object ) :
                 self.asr_event()
 
     def asr_event( self ) :
-        # self.update_ui_state( 'recording' )
         self.get_text_from_input( 'recording' )
         self.start_asr()
 
     def start_asr( self ) :
         os.system( "sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000 -inmic yes -adcdev plughw:1,0 -logfn /dev/null | tee ./words.log &" )
-        self.poll_asr_results()
+        text = self.poll_asr_results()
+        self.full_text_search( text )
+        self.update_ui_state( 'results' )
+
 
     def stop_asr( self ) :
         os.system( "sudo pkill -9 pocketsphinx" )
-        print "stop asr"
 
     def poll_asr_results( self ) :
 
@@ -297,6 +334,8 @@ class OLED_UI( object ) :
                     self.stop_asr()
                     self.get_text_from_input( self.asr_result )
 
+        return last_line
+
     def get_text_from_input( self, text, x=0, top=-2 ) :
 
         self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
@@ -320,16 +359,22 @@ class OLED_UI( object ) :
         os.system( 'play ' + path + ' &' )
 
     def play_sound_from_text( self, text ) :
-        result = self.full_text_search( text )
-        count = len( result )        
-        print count
-        print result[0][1]
-        return
+        result = self.text_search( text )
+        count = len( result )
 
-        for row in result :
-            print body[0]
-        #os.system( 'play ' + path + ' &' )
-        print "done"
+        # dict_id = False
+        # sounds = False
+
+        while count is not None :
+            print count
+            dict_id result[0][0]
+
+        if dict_id is not None :
+            sounds = self.sound_search( dict_id )
+
+        if sounds is not None :
+
+        
         return
 
     def get_sound_duration( self, path ) :
