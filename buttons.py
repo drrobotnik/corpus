@@ -259,12 +259,12 @@ class OLED_UI( object ) :
 
     def asr_event( self ) :
         self.update_ui_state( 'recording' )
+        self.get_text_from_input( 'recording' )
         self.start_asr()
 
     def start_asr( self ) :
         os.system( "sudo pocketsphinx_continuous -lm ./corpus/0720.lm -dict ./corpus/0720.dic -samprate 16000 -inmic yes -adcdev plughw:1,0 -logfn /dev/null | tee ./words.log &" )
         self.poll_asr_results()
-        self.get_text_from_input( 'recording' )
 
     def stop_asr( self ) :
         os.system( "sudo pkill -9 pocketsphinx" )
