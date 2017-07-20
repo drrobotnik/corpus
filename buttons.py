@@ -18,6 +18,8 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
+import textwrap
+
 class OLED_UI( object ) :
 
     # oled RST pin
@@ -42,18 +44,19 @@ class OLED_UI( object ) :
     ]
 
     soundboard = [
-    './sound/0001.wav',
-    './sound/0002.wav',
-    './sound/0001.wav',
-    './sound/0002.wav',
-    './sound/0001.wav',
-    './sound/0002.wav',
-    './sound/0001.wav',
-    './sound/0002.wav',
-    './sound/0001.wav',
-    './sound/0002.wav',
-    './sound/0001.wav',
-    './sound/0002.wav',
+    'ZERO INDEX',
+    "OOF",
+    "KEEP YOUR REQUESTS SIMPLE.",
+    'WHAT THE HELL?',
+    'FOCUS ON SCIENCE.',
+    'WHAT AM I, A HACK?',
+    "THE ANSWER IS DON'T THINK ABOUT IT",
+    'FINE! EVERYTHING IS FINE!',
+    'ARE YOU PEOPLE EVEN HUMAN?',
+    'WOW. HAT TRICK.',
+    "BEGINNER'S LUCK",
+    'UH OH.',
+    "WE'RE NOT SKIPPING A BEAT, MORTY",
     ]
 
     ui_state = 'history'
@@ -61,7 +64,11 @@ class OLED_UI( object ) :
     list_len = 0
     previous_text = ''
     content = ''
+    asr_recording = False
     asr_result = ''
+    d_event = False
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
 
     def __init__( self ) :
         self.initialize_config()
@@ -89,13 +96,14 @@ class OLED_UI( object ) :
         #GPIO.add_event_detect(U_pin, GPIO.FALLING, callback=count_up, bouncetime=300)
         #GPIO.add_event_detect(D_pin, GPIO.FALLING, callback=count_down, bouncetime=300)
 
-        GPIO.add_event_detect( self.U_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
-        GPIO.add_event_detect( self.D_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
+        GPIO.add_event_detect( self.U_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=500 )
+        GPIO.add_event_detect( self.D_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=500 )
 
-        GPIO.add_event_detect( self.L_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
-        GPIO.add_event_detect( self.R_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
+        GPIO.add_event_detect( self.L_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=500 )
+        GPIO.add_event_detect( self.R_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=500 )
 
-        GPIO.add_event_detect( self.C_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=300 )
+        GPIO.add_event_detect( self.C_pin, GPIO.FALLING, callback=self.direction_event, bouncetime=500 )
+
 
     def initialize_screen( self ) :
 
@@ -124,8 +132,8 @@ class OLED_UI( object ) :
         top = -2
 
         # Load default font.
-        self.font = ImageFont.load_default()
-
+        # self.font = ImageFont.load_default()
+        self.font = ImageFont.truetype("VCR.ttf", 14)
         self.update_ui_state( self.ui_state )
 
     def initialize_db( self ) :
@@ -160,12 +168,10 @@ class OLED_UI( object ) :
         # Iterate through the result of curA
         results = cursor.fetchall()
 
-        if results is not None :
-            with open('./results.log', 'w') as f:
-                for row in results:
-                    print row
-                    f.write("%s\n" % str(row))
-                return results
+        with open('./results.log', 'w') as f:
+            for row in results:
+                # print row[0][0]
+                f.write("%s\n" % str(row[0][0]))
 
         return False
 
@@ -173,34 +179,33 @@ class OLED_UI( object ) :
         cursor = self.db.cursor( buffered=True )
 
         query = ( 
-            "SELECT id, body, "
+            "SELECT id, body "
             "FROM dictionary "
-            "WHERE (body=%s "
-            "LIMIT 1")
+            "WHERE body=%s")
 
-        cursor.execute( query, ( text ) )
+        cursor.execute( query, ( text, ) )
         row = cursor.fetchone()
-        
-        while row is not None:
-            result = cursor.fetchone()
+        # print row
+        if row is not None :
+            return row
 
-        return result
+        return False
 
     def sound_search( self, dict_id ) :
         cursor = self.db.cursor( buffered=True )
 
         query = ( 
-            "SELECT sound_file, "
+            "SELECT sound_file "
             "FROM dictionary_meta "
-            "WHERE (dict_id=%s ")
+            "WHERE dict_id=%s ")
 
-        cursor.execute( query, ( dict_id ) )
+        cursor.execute( query, ( dict_id, ) )
         row = cursor.fetchall()
         
-        while row is not None:
-            result = cursor.fetchone()
+        if row is not None :
+            return row[0]
 
-        return result
+        return False
 
 
     def get_ui_state( self ) :
@@ -228,6 +233,25 @@ class OLED_UI( object ) :
 
         self.get_text_from_line( 0 )
 
+    def update_history( self, text ) :
+        #print type(self.content)
+        #print "0. "
+        #print text
+        #print "1. "
+        #print self.get_current_line()
+        popped = self.content.pop(self.get_current_line())
+        #print "2. "
+        #print popped
+        self.content.insert( 0, popped )
+        #print "3. "
+        #print self.content
+        with open('./history.log', 'w') as f:
+            for row in self.content:
+                #print row
+                f.write("%s\n" % str(row))
+        return
+
+
     def get_current_line( self ) :
         return self.current_line
 
@@ -247,8 +271,8 @@ class OLED_UI( object ) :
         current_line = self.get_current_line()
         new_line = self.set_current_line( current_line + 1 )
 
-        print 'count up: '
-        print new_line
+        # print 'count up: '
+        # print new_line
 
         self.get_text_from_line( new_line )
 
@@ -256,25 +280,27 @@ class OLED_UI( object ) :
         current_line = self.get_current_line()
         new_line = self.set_current_line( current_line - 1 )
 
-        print 'count down: '
-        print new_line
+        # print 'count down: '
+        # print new_line
 
         self.get_text_from_line( new_line )
 
+    def reset_direction_event( self, obj ) :
+        self.d_event = False
     def direction_event( self, obj ) :
         current_line = self.get_current_line()
         new_line = current_line
         line = self.set_current_line( new_line )
         text = self.get_text_from_line( line )
         ui_state = self.ui_state
-        
+
         if self.U_pin == obj :
             print "up"
             new_line = current_line + 1
         elif self.D_pin == obj :
             print "down"
             new_line = current_line - 1
-        
+
         if self.U_pin == obj or self.D_pin == obj :
             line = self.set_current_line( new_line )
             text = self.get_text_from_line( line )
@@ -290,12 +316,13 @@ class OLED_UI( object ) :
             if self.R_pin == obj : # clicked forward, regardless of UI state, play current line sound
                 self.play_sound_from_text( text )
                 self.update_ui_state( 'history' ) # reset interface
-            elif 'result' == ui_state and self.L_pin == obj : # clicked back on result line, return to history
+            elif self.L_pin == obj : # clicked back, return to history
                 self.update_ui_state( 'history' ) # reset interface
 
         if 'recording' != ui_state and self.C_pin == obj : # Pushed down on dpad, run ASR
             print "center pressed"
-            if 'recording' != ui_state :
+            if True != self.asr_recording :
+                self.asr_recording = True
                 self.asr_event()
 
     def asr_event( self ) :
@@ -310,6 +337,7 @@ class OLED_UI( object ) :
 
 
     def stop_asr( self ) :
+        self.asr_recording = False
         os.system( "sudo pkill -9 pocketsphinx" )
 
     def poll_asr_results( self ) :
@@ -346,7 +374,7 @@ class OLED_UI( object ) :
         self.draw.rectangle( ( 0, 0, self.width, self.height ), outline=0, fill=0 )
         self.draw.text( (x, top), str( text ),  font=self.font, fill=255 )
 
-        print text
+        # print text
         return text
 
     def get_text_from_line( self, line, x=0, top=-2 ) :
@@ -355,36 +383,71 @@ class OLED_UI( object ) :
         draw = self.draw
         text = self.content[ new_line ]
         draw.rectangle( (0, 0, self.width, self.height ), outline=0, fill=0 )
-        draw.text( (x, top ), str( text ),  font=self.font, fill=255 )
+        # draw.text( (x, top ), str( text ),  font=self.font, fill=255 )
 
-        print text
+        offset = top
+
+        for line in textwrap.wrap(text, width=40):
+            draw.text((x, offset), line, font=self.font, fill=255)
+            offset += self.font.getsize(line)[1]
+
+        # print text
         return text
 
     def play_sound( self, path ) :
-        os.system( 'play ' + path + ' &' )
+        print path
+        os.system( 'play ' + self.dir_path + path )
 
-    def play_sound_from_text( self, text ) :
+    def get_sound_from_text( self, text ) :
         result = self.text_search( text )
-        count = len( result )
 
-        # dict_id = False
-        # sounds = False
+        sounds = False
 
-        while count is not None :
-            print count
-            dict_id = result[0][0]
+        if result == False :
+            return False
+
+        if result is not None :
+            count = len( result )
+
+            dict_id = result[0]
 
         if dict_id is not None :
+            # print dict_id
             sounds = self.sound_search( dict_id )
-            print sounds
+            return sounds[0]
+
+        return False
+
+    def play_sound_from_text( self, text ) :
+        sound = self.get_sound_from_text( text )
+        #result = self.text_search( text )
+
+        #if result == False :
+            #return False
+
+        #if result is not None :
+            #count = len( result )
+
+            #dict_id = result[0]
+
+        if sound is not None :
+            # print dict_id
+            #sounds = self.sound_search( dict_id )
+            self.update_history( text )
+            # print sound
+            self.play_sound( sound )
 
         #if sounds is not None :
 
-        
         return
 
+    def get_sound_duration_from_text( self, text ) :
+        sound = self.get_sound_from_text( text )
+        return self.get_sound_duration( sound )
+        
+
     def get_sound_duration( self, path ) :
-        with contextlib.closing( wave.open( path, 'r' ) ) as f :
+        with contextlib.closing( wave.open( self.dir_path + path, 'r' ) ) as f :
             frames = f.getnframes()
             rate = f.getframerate()
             duration = frames / float(rate)
@@ -447,12 +510,10 @@ class OLED_UI( object ) :
             GPIO.setup( self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_UP )
 
     def loop( self ) :
-        print "looping"
         
-        try :
-        
+        try :        
             digit = None
-            
+
             while 1 :
                 # Display image.
                 self.disp.image( self.image )
@@ -461,10 +522,11 @@ class OLED_UI( object ) :
                 digit = self.get_keypad_key()
 
                 if digit != None :
-                    print digit
+                    #print digit
                     if type( digit ) is not str :
-                        self.play_sound( self.soundboard[ digit ] )
-                        sleep = self.get_sound_duration( self.soundboard[ digit ] )
+                        print self.soundboard[ digit ]
+                        self.play_sound_from_text( self.soundboard[ digit ] )
+                        sleep = self.get_sound_duration_from_text( self.soundboard[ digit ] )
 
                     self.update_ui_state( 'history' ) # reset interface
                     digit = None
